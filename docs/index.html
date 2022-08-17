@@ -78,6 +78,8 @@
         </div>
 
         <div class="row my-4">
+          <label for="ctl-duration" class="form-label">Duration {{ duration }} s</label>
+          <input type="range" class="form-range" id="ctl-duration" v-model="duration" min="0" max="5" step="0.2">
           {{ lastNote }}{{ lastNote && ' Hz'}}
         </div>
 
@@ -143,21 +145,22 @@
 
           // Create a synth and connect it to the main output (your speakers).
           const startSynth = () => {
-            synth = new Tone.Synth().toDestination();
+            synth = new Tone.PolySynth().toDestination();
           }
 
           // Set the default duration to an eighth note at ? bpm.
-          const defaultDuration = '4n';
+          const duration = ref(1);
 
           return {
             c: 261.63,
             a: 440,
+            duration,
             lastNote,
             /** Play a note. */
-            play(note, duration = defaultDuration) {
+            play(note) {
               lastNote.value = note;
               synth || startSynth();
-              synth.triggerAttackRelease(note, duration);
+              synth.triggerAttackRelease(note, duration.value);
             },
           }
         },
