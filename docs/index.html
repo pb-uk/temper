@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://unpkg.com/vue@3"></script>
+
+    <title>Musical temperament</title>
+    <style>
+      
+.notes {
+  height: 6rem;
+}
+
+.notes button {
+  border-radius: 0 0 0.5rem 0.5rem;
+  border-width: 0;
+  margin: 0 0.005rem;
+  height: 6rem;
+  width: 2rem;
+  padding: 0;
+}
+
+.sharps button {
+  height: 4rem;
+  font-size: 0.75rem;
+  background: #333;
+  color: #fff;
+}
+
+.naturals button {
+  padding-top: 3.75rem;
+}
+
+.notes button.gap {
+  margin-left: 1.125rem;
+}
+
+.notes button.gap2 {
+  margin-left: 2.375rem;
+}
+
+    </style>
+  </head>
+  <body>
+    <div id="app">
+    </div>
+
+    <script id="tpl-app" type="text/template">
+      <div class="container">
+        <div class="row my-4">
+          <h1>Musical temperament</h1>
+        </div>
+        <div class="row my-4">
+          <h2>Equal temperament</h2>
+          <div class="notes position-relative">
+            <div class="naturals position-absolute">
+              <button @click="play('C4')">C</button>
+              <button @click="play('D4')">D</button>
+              <button @click="play('E4')">E</button>
+              <button @click="play('F4')">F</button>
+              <button @click="play('G4')">G</button>
+              <button @click="play('A4')">A</button>
+              <button @click="play('B4')">B</button>
+              <button @click="play('C5')">C</button>
+            </div>
+          
+            <div class="sharps position-absolute">
+              <button @click="play('C#4')" class="gap">C#<br/>Db</button>
+              <button @click="play('D#4')">D#<br/>Eb</button>
+              <button @click="play('F#4')" class="gap2">F#<br/>Gb</button>
+              <button @click="play('G#4')">G#<br/>Ab</button>
+              <button @click="play('A#4')">A#<br/>Bb</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row my-4">
+          {{ lastNote }}{{ lastNote && ' Hz'}}
+        </div>
+
+        <div class="row my-4">
+          <h2>Just temperament in C</h2>
+          <div class="notes position-relative">
+            <div class="naturals position-absolute">
+              <button @click="play(c)">C</button>
+              <button @click="play(c * 9 / 8)">D</button>
+              <button @click="play(c * 5 / 4)">E</button>
+              <button @click="play(c * 4 / 3)">F</button>
+              <button @click="play(c * 3 / 2)">G</button>
+              <button @click="play(c * 5 / 3)">A</button>
+              <button @click="play(c * 15 / 8)">B</button>
+              <button @click="play(c * 2)">C</button>
+            </div>
+          
+            <div class="sharps position-absolute">
+              <button @click="play(c * 16 / 15)" class="gap">C#<br/>Db</button>
+              <button @click="play(c * 6 / 5)">D#<br/>Eb</button>
+              <button @click="play(c * 64 / 45)" class="gap2">F#<br/>Gb</button>
+              <button @click="play(c * 8 / 5)">G#<br/>Ab</button>
+              <button @click="play(c * 16 / 9)">A#<br/>Bb</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row my-4">
+          <h2>Just temperament in A</h2>
+          <div class="notes position-relative">
+            <div class="naturals position-absolute">
+              <button @click="play(a / 2 * 6 / 5)">C</button>
+              <button @click="play(a / 2 * 4 / 3)">D</button>
+              <button @click="play(a / 2 * 3 / 2)">E</button>
+              <button @click="play(a / 2 * 8 / 5)">F</button>
+              <button @click="play(a / 2 * 16 / 9)">G</button>
+              <button @click="play(a)">A</button>
+              <button @click="play(a * 9 / 8)">B</button>
+              <button @click="play(a * 6 / 5)">C</button>
+            </div>
+
+            <div class="sharps position-absolute">
+              <button @click="play(a / 2 * 5 / 4)" class="gap">C#<br/>Db</button>
+              <button @click="play(a / 2 * 64 / 45)">D#<br/>Eb</button>
+              <button @click="play(a / 2 * 5 / 3)" class="gap2">F#<br/>Gb</button>
+              <button @click="play(a / 2 * 15 / 8)">G#<br/>Ab</button>
+              <button @click="play(a * 16 / 15)">A#<br/>Bb</button>
+            </div>
+          </div>
+        </div>
+        <footer class="text-center text-muted">Copyright &copy; pbuk | AGPL-3.0-or-later</footer>
+      </div>
+    </script>
+
+    <script>
+      const { createApp, ref } = Vue;
+
+      createApp({
+        template: '#tpl-app',
+        setup() {
+          let synth;
+          const lastNote = ref();
+
+          // Create a synth and connect it to the main output (your speakers).
+          const startSynth = () => {
+            synth = new Tone.Synth().toDestination();
+          }
+
+          // Set the default duration to an eighth note at ? bpm.
+          const defaultDuration = '4n';
+
+          return {
+            c: 261.63,
+            a: 440,
+            lastNote,
+            /** Play a note. */
+            play(note, duration = defaultDuration) {
+              lastNote.value = note;
+              synth || startSynth();
+              synth.triggerAttackRelease(note, duration);
+            },
+          }
+        },
+      }).mount('#app');
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/tone"></script>
+  </body>
+</html>
